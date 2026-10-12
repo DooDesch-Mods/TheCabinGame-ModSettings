@@ -87,6 +87,54 @@ check('codec rejects truncation, duplicate keys and code',lambda: owner.execute(
 late = vm()
 late.execute('registry=require("cabin_registry").new(transport,log); registry:register({id="late",name="Late",fields={}}, {read=function() return {},0 end, apply=function(v) return v,1 end})')
 check('late registration is discovered without reload',lambda: menu.execute('assert(#registry:list()==2)'))
+bus.clear()
+action_owner, action_menu = vm(), vm()
+with tempfile.TemporaryDirectory(dir=OUT,prefix='action-') as folder:
+    action_owner.globals().action_path = (Path(folder)/'action.dat').as_posix()
+    action_owner.globals().other_path = (Path(folder)/'other.dat').as_posix()
+    action_owner.execute('''
+        storage=require("cabin_store");registry=require("cabin_registry").new(transport,log)
+        action_fields={{key="profile",label="Profile",type="choice",default="current",options={{value="current"},{value="performance"}}},{key="restore",label="Restore previous",type="action"}}
+        other_fields={{key="n",label="Number",type="number",default=2,min=1}}
+        action_store=storage.new(action_path,action_fields,log);action_store:save({profile="performance"})
+        other_store=storage.new(other_path,other_fields,log);writes={action=0,other=0};fail_action=false
+        registry:register({id="test_action",name="Action",fields=action_fields},{read=function() return action_store:read() end,
+            apply=function(values,action)
+                assert(action=="" or action=="restore");if action=="" then return action_store:save(values) end
+                if fail_action then error("injected restore failure") end
+                writes.action=writes.action+1;return action_store:save({profile="current"})
+            end})
+        registry:register({id="test_other",name="Other",fields=other_fields},{read=function() return other_store:read() end,
+            apply=function(values,action) assert(action=="");writes.other=writes.other+1;return other_store:save(values) end})
+    ''')
+    action_menu.execute('registry=require("cabin_registry").new(transport,log);now=1;panel=require("cabin_panel").new(registry,function() return now end);panel:open();panel:edit("test_other","n",4);assert(panel:action("test_action","restore"))')
+    check('action immediately dispatches only its mod and awaits acknowledgement',lambda: action_menu.execute('assert(panel.pending.id=="test_action" and panel.drafts.test_other.dirty and panel.drafts.test_other.values.n==4)'))
+    check('pending action prevents duplicate dispatch',lambda: action_menu.execute('assert(not pcall(function() panel:action("test_action","restore") end))'))
+    action_owner.execute('registry:poll();assert(writes.action==1 and writes.other==0 and action_store.values.profile=="current")')
+    check('action acknowledgement updates snapshot and preserves other drafts',lambda: action_menu.execute('panel:poll();assert(not panel.pending and not panel.error and panel.drafts.test_action.values.profile=="current" and not panel.drafts.test_action.dirty and panel.drafts.test_other.dirty and panel.drafts.test_other.values.n==4)'))
+    check('Defaults remains staged after immediate action',lambda: action_menu.execute('panel:defaults("test_other");assert(not panel.pending and panel.drafts.test_other.values.n==2 and panel.drafts.test_other.dirty)'))
+    action_owner.execute('registry:poll();assert(writes.other==0)')
+    check('unregistered action never dispatches',lambda: action_menu.execute('assert(not pcall(function() panel:action("test_action","unknown") end) and not panel.pending)'))
+    check('invalid action values retain visible error without dispatch',lambda: action_menu.execute('panel:edit("test_action","profile","invalid");assert(not panel:action("test_action","restore") and panel.error:find("invalid",1,true) and not panel.pending)'))
+    action_menu.execute('panel:edit("test_action","profile","current");panel:edit("test_other","n",6);assert(panel:action("test_action","restore"))')
+    action_owner.execute('fail_action=true;registry:poll();assert(writes.action==1 and writes.other==0)')
+    check('failed action acknowledgement stays visible and leaves other drafts unsent',lambda: action_menu.execute('panel:poll();assert(panel.error:find("injected restore failure",1,true) and not panel.pending and panel.drafts.test_action.dirty and panel.drafts.test_other.dirty and panel.drafts.test_other.values.n==6)'))
+    action_owner.execute('fail_action=false')
+    action_menu.execute('assert(panel:action("test_action","restore"));now=12;panel:poll()')
+    check('action timeout keeps unknown result pending without replay',lambda: action_menu.execute('assert(panel.pending and panel.error:find("unknown",1,true));assert(not pcall(function() panel:action("test_action","restore") end))'))
+    action_owner.execute('registry:poll()')
+    check('late action acknowledgement resolves timeout',lambda: action_menu.execute('panel:poll();assert(not panel.pending and not panel.error and panel.drafts.test_other.values.n==6)'))
+    action_menu.execute('assert(panel:action("test_action","restore"));panel:cancel();assert(not panel.visible and panel.pending and not panel.queue and not panel.drafts.test_other)')
+    action_owner.execute('registry:poll();assert(writes.other==0)')
+    check('Cancel retains in-flight action acknowledgement and discards unsent drafts',lambda: action_menu.execute('panel:poll();assert(not panel.pending and not panel.visible);panel:open();assert(panel.drafts.test_other.values.n==2)'))
+    action_menu.execute('panel:edit("test_other","n",5);assert(panel:applyAll())')
+    action_owner.execute('registry:poll();assert(writes.other==1 and other_store.values.n==5)')
+    check('normal Apply still persists other modified values',lambda: action_menu.execute('panel:poll();assert(not panel.pending and not panel.error and panel.drafts.test_other.values.n==5)'))
+    action_menu.execute('assert(panel:action("test_action","restore"))')
+    action_owner.execute('fail_action=true;registry:poll()')
+    action_menu.execute('panel:poll();assert(panel.error:find("injected restore failure",1,true));panel:edit("test_action","profile","performance");assert(panel.drafts.test_action.action=="" and panel:applyAll())')
+    action_owner.execute('registry:poll();assert(action_store.values.profile=="performance")')
+    check('editing after failed action sends ordinary Apply without stale Restore',lambda: action_menu.execute('panel:poll();assert(not panel.pending and not panel.error and panel.drafts.test_action.values.profile=="performance")'))
 syntax = owner.eval('function(source,name) return assert(load(source,name,"t",{})) end')
 sources = []
 for path in sorted(SHARED.glob('*.lua')):

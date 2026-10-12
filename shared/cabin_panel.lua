@@ -15,6 +15,7 @@ function M.new(registry, clock)
         assert(self.visible and not self.pending,"panel unavailable while applying")
         local draft = assert(self.drafts[id],"mod unavailable")
         draft.values[key], draft.dirty = value, true
+        draft.action = ""
         self.error = nil
     end
     function self:defaults(id)
@@ -30,6 +31,7 @@ function M.new(registry, clock)
         for _,field in ipairs(draft.snapshot.definition.fields) do if field.key == key and field.type == "action" then found = true end end
         assert(found,"unregistered settings action")
         draft.action, draft.dirty = key, true
+        return self:apply(id)
     end
     function self:cancel()
         self.queue=nil

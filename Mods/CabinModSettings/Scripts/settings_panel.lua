@@ -7,9 +7,10 @@ local NUMBER="/Game/CabinModSettings/CabinNumberRow.CabinNumberRow_C"
 local SELECTOR="/Game/CabinModSettings/CabinSelectorRow.CabinSelectorRow_C"
 local ACTION="/Game/CabinModSettings/CabinActionRow.CabinActionRow_C"
 local DEFAULTS="/Game/CabinModSettings/CabinDefaultsRow.CabinDefaultsRow_C"
+local function numberScale(field) return field.display=="percent" and 100 or 1 end
 local function numberLabel(field,value)
-    local display=field.display=="percent" and value*100 or value
-    return string.format("%.2f",display):gsub("0+$",""):gsub("%.$","") .. (field.display=="percent" and " %" or "")
+    local display=value*numberScale(field)
+    return string.format("%.0f",math.floor(display+0.5)) .. (field.display=="percent" and " %" or "")
 end
 function M.start(mod,directory)
     local model=require("cabin_panel").new(mod.registry,os.time)
@@ -59,9 +60,16 @@ function M.start(mod,directory)
                 local value=record.widget.Slider:GetValue()
                 local draft=assert(model.drafts[record.id],"number row mod unavailable")
                 if record.last_read~=value then
+                    local scale=numberScale(record.field)
+                    local step=1/scale
+                    local snapped=math.max(record.field.min,math.min(record.field.max,math.floor(value*scale+0.5)/scale))
+                    if value~=snapped then record.widget.Slider:SetValue(snapped) end
+                    local readback=record.widget.Slider:GetValue()
+                    assert(math.abs(readback-snapped)<=step/10000,"slider step readback differs: " .. record.field.key .. "; observed=" .. tostring(readback) .. "; required=" .. tostring(snapped))
+                    value=snapped
                     ui.text(record.widget.SliderAmount,numberLabel(record.field,value))
-                    model:edit(record.id,record.field.key,math.max(record.field.min,math.min(record.field.max,value)))
-                    record.last_read=value
+                    model:edit(record.id,record.field.key,value)
+                    record.last_read=readback
                 end
             end
         end
@@ -90,8 +98,8 @@ function M.start(mod,directory)
                 assert(type(field.min)=="number" and type(field.max)=="number" and field.min<field.max,"slider range unavailable: " .. field.key)
                 row.Slider:SetMinValue(field.min)
                 row.Slider:SetMaxValue(field.max)
-                row.Slider:SetStepSize((field.max-field.min)/100)
-                row.Slider.MouseUsesStep=false
+                row.Slider:SetStepSize(1/numberScale(field))
+                row.Slider.MouseUsesStep=true
                 row.Slider:SetValue(value)
                 self.rows[row:GetAddress()].last_read=row.Slider:GetValue()
                 ui.text(row.SliderAmount,numberLabel(field,value))
@@ -231,7 +239,10 @@ function M.start(mod,directory)
         elseif record.role=="support" then
             assert(ui.valid(StaticFindObject("/Script/Engine.KismetSystemLibrary:LaunchURL")),"support URL function unavailable")
             StaticFindObject("/Script/Engine.Default__KismetSystemLibrary"):LaunchURL(record.url)
-        elseif record.role=="action" then model:action(record.id,record.field.key);status()
+        elseif record.role=="action" then
+            model:action(record.id,record.field.key)
+            self.selection_requested={id=record.id}
+            status()
         elseif record.role=="choice" then
             record.index=(record.index-1+direction)%#record.field.options+1
             local option=record.field.options[record.index]

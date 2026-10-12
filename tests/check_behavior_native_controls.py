@@ -12,6 +12,7 @@ local codec=require("cabin_codec")
 local definition={id="alpha",name="Alpha",fields={{key="enabled",label="Enabled",type="boolean",default=true},{key="restore",label="Restore previous",type="action"}}}
 local other={id="beta",name="Beta",fields={{key="enabled",label="Enabled",type="boolean",default=true}}}
 requests,callbacks,observers,animations,created={},{},{},{},{}
+responses={}
 local registry={}
 function registry:list()
     return {{definition=codec.copy(definition),values={enabled=true},revision=1},{definition=codec.copy(other),values={enabled=true},revision=1}}
@@ -19,7 +20,7 @@ end
 function registry:request(id,token,revision,values,action)
     requests[#requests+1]={id=id,token=token,revision=revision,values=codec.copy(values),action=action}
 end
-function registry:response() return nil end
+function registry:response(id,token) return responses[token] end
 local serial=0
 local function widget(class)
     serial=serial+1
@@ -199,14 +200,26 @@ class NativeControls(unittest.TestCase):
         assert(#requests==0)
         ''')
 
-    def test_restore_only_stages_owned_mod_action_and_apply_dispatches_it(self):
+    def test_restore_dispatches_owned_mod_immediately_and_refreshes_after_ack(self):
         self.vm.execute(r'''
-        open("settings");action()
+        open("settings");panel.model:edit("beta","enabled",false);action()
         assert(panel.model.drafts.alpha.action=="restore" and panel.model.drafts.alpha.dirty)
-        assert(#requests==0)
-        footer("apply")
         assert(#requests==1 and requests[1].id=="alpha" and requests[1].action=="restore")
-        tab(2,"press");assert(panel.selection_requested==nil,"pending panel accepted selection")
+        assert(panel.model.pending and panel.error.text=="Applying settings" and panel.content.enabled==false)
+        tab(2,"press");assert(panel.selection_requested.id=="alpha","pending panel changed selection")
+        action();tick();assert(#requests==1 and panel.model.pending,"pending action replayed")
+        responses[requests[1].token]={ok=true,values={enabled=false},revision=2}
+        tick()
+        assert(not panel.model.pending and not panel.selection_requested and panel.error.text=="" and panel.content.enabled)
+        assert(panel.model.drafts.alpha.values.enabled==false and not panel.model.drafts.alpha.dirty)
+        assert(panel.model.drafts.beta.values.enabled==false and panel.model.drafts.beta.dirty and #requests==1)
+        for _,record in pairs(panel.rows) do if record.role=="boolean" then assert(record.widget.CheckBox_129.checked==false,"ACK values did not refresh control") end end
+        action();assert(#requests==2 and panel.model.pending)
+        responses[requests[2].token]={ok=false,error="injected original restore failure"}
+        tick()
+        assert(not panel.model.pending and not panel.selection_requested and panel.content.enabled)
+        assert(panel.error.text=="injected original restore failure" and panel.model.drafts.alpha.dirty)
+        assert(panel.model.drafts.alpha.snapshot.revision==2 and panel.model.drafts.beta.dirty and #requests==2)
         ''')
 
     def test_info_tabs_have_owned_selection_and_support_action_bounds(self):
@@ -257,7 +270,7 @@ class NativeControls(unittest.TestCase):
     def test_defaults_cancel_and_apply_keep_draft_only_semantics(self):
         self.vm.execute(r'''
         open("settings")
-        panel.model:edit("alpha","enabled",false);action()
+        panel.model:edit("alpha","enabled",false)
         panel.model:edit("beta","enabled",false)
         defaults("press")
         assert(panel.model.drafts.alpha.values.enabled==true and panel.model.drafts.alpha.action=="")
