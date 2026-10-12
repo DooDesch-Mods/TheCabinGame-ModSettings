@@ -8,6 +8,7 @@ on:
         default: false
 permissions:
   contents: write
+  actions: write
 concurrency:
   group: release-${{ github.repository }}
   cancel-in-progress: false
@@ -67,3 +68,10 @@ jobs:
           name: nexus-release-receipt
           path: dist/nexus-release.json
           if-no-files-found: warn
+      - name: Dispatch Discord announcement
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: v${{ steps.target.outputs.version }}
+        run: gh workflow run discord.yml --repo "$GH_REPO" --ref "$RELEASE_TAG" -f tag="$RELEASE_TAG" -f announce=true
