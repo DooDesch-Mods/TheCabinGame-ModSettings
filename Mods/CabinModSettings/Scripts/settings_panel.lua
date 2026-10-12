@@ -82,8 +82,18 @@ function M.start(mod,directory)
         for address,record in pairs(self.rows) do if record.role~="select" then self.rows[address]=nil end end
         local draft=model.drafts[id]
         add(self.content,label(draft.snapshot.definition.name))
+        local hostOnly=#draft.snapshot.definition.fields>0
         for _,field in ipairs(draft.snapshot.definition.fields) do
-            local title=field.label .. (field.host and " - Host setting (next round)" or "")
+            if not field.host then hostOnly=false end
+        end
+        if hostOnly then add(self.content,label("Host settings - next round")) end
+        if draft.snapshot.definition.hint then
+            local hint=label(draft.snapshot.definition.hint)
+            hint:SetAutoWrapText(true)
+            add(self.content,hint)
+        end
+        for _,field in ipairs(draft.snapshot.definition.fields) do
+            local title=field.label .. (field.host and not hostOnly and " - Host setting (next round)" or "")
             local row
             if field.type=="boolean" then
                 row=ui.create(BOOL,self.root,self.pc)
@@ -93,6 +103,7 @@ function M.start(mod,directory)
             elseif field.type=="number" then
                 row=ui.create(NUMBER,self.root,self.pc)
                 ui.text(row.SlotTitle_T,title)
+                row.SlotTitle_T:SetAutoWrapText(true)
                 self.rows[row:GetAddress()]={widget=row,id=id,field=field,role="number"}
                 local value=draft.values[field.key]
                 assert(type(field.min)=="number" and type(field.max)=="number" and field.min<field.max,"slider range unavailable: " .. field.key)

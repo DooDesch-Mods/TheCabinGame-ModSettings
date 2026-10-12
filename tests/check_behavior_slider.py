@@ -70,6 +70,7 @@ local function widget()
     function value:IsInViewport() return self.viewport end
     function value:RemoveFromParent() self.viewport=false end
     function value:SetFont(font) self.font=font end
+    function value:SetAutoWrapText(enabled) self.auto_wrap=enabled end
     function value:SetIsEnabled(enabled) self.enabled=enabled end
     return value
 end
