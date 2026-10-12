@@ -4,6 +4,10 @@ local PANEL="/Game/CabinModSettings/CabinSettingsPanel.CabinSettingsPanel_C"
 local CHOICE="/Game/CabinModSettings/CabinChoiceRow.CabinChoiceRow_C"
 local BOOL="/Game/CabinModSettings/CabinBoolRow.CabinBoolRow_C"
 local NUMBER="/Game/CabinModSettings/CabinNumberRow.CabinNumberRow_C"
+local function numberLabel(field,value)
+    local display=field.display=="percent" and value*100 or value
+    return string.format("%.2f",display):gsub("0+$",""):gsub("%.$","") .. (field.display=="percent" and " %" or "")
+end
 function M.start(mod,directory)
     local model=require("cabin_panel").new(mod.registry,os.time)
     local self={model=model,rows={},selectors={},rendering=false}
@@ -23,11 +27,11 @@ function M.start(mod,directory)
         row.RightArrow_B:SetVisibility(1);row.OptionType_T:SetVisibility(1)
         local title=row.SlotTitle_T
         title:RemoveFromParent();row.LeftArrow_B:SetContent(title)
-        title:SetFont(self.font);title:SetAutoWrapText(true)
+        title:SetFont(self.font);title:SetAutoWrapText(role~="action")
         row.LeftArrow_B:SetRenderScale({X=1,Y=1})
         local box=row.LeftArrow_B:GetParent()
         box:ClearChildren()
-        box:AddChildToHorizontalBox(row.LeftArrow_B):SetSize({Value=1,SizeRule=1})
+        box:AddChildToHorizontalBox(row.LeftArrow_B):SetSize({Value=1,SizeRule=role=="action" and 0 or 1})
         row.LeftArrow_B.Slot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
         title.Slot:SetPadding({Left=8,Top=6,Right=8,Bottom=6})
         title.Slot:SetHorizontalAlignment(1)
@@ -53,10 +57,13 @@ function M.start(mod,directory)
         if self.mode~="settings" or self.rendering or model.pending or self.selection_requested then return end
         for _,record in pairs(self.rows) do
             if record.role=="number" and ui.valid(record.widget) and record.widget:IsVisible() then
-                local bytes=record.widget.CheckBox_129:GetText():ToString()
-                local value=tonumber(bytes) or bytes
+                local value=record.widget.Slider:GetValue()
                 local draft=assert(model.drafts[record.id],"number row mod unavailable")
-                if draft.values[record.field.key]~=value then model:edit(record.id,record.field.key,value) end
+                if record.last_read~=value then
+                    ui.text(record.widget.SliderAmount,numberLabel(record.field,value))
+                    model:edit(record.id,record.field.key,math.max(record.field.min,math.min(record.field.max,value)))
+                    record.last_read=value
+                end
             end
         end
     end
@@ -80,7 +87,14 @@ function M.start(mod,directory)
                 ui.text(row.SlotTitle_T,title)
                 self.rows[row:GetAddress()]={widget=row,id=id,field=field,role="number"}
                 local value=draft.values[field.key]
-                row.CheckBox_129:SetText(FText(type(value)=="number" and string.format("%.17g",value) or tostring(value)))
+                assert(type(field.min)=="number" and type(field.max)=="number" and field.min<field.max,"slider range unavailable: " .. field.key)
+                row.Slider:SetMinValue(field.min)
+                row.Slider:SetMaxValue(field.max)
+                row.Slider:SetStepSize((field.max-field.min)/100)
+                row.Slider.MouseUsesStep=false
+                row.Slider:SetValue(value)
+                self.rows[row:GetAddress()].last_read=row.Slider:GetValue()
+                ui.text(row.SliderAmount,numberLabel(field,value))
             elseif field.type=="choice" then
                 row=ui.create(CHOICE,self.root,self.pc)
                 ui.text(row.SlotTitle_T,title)
@@ -93,7 +107,8 @@ function M.start(mod,directory)
                 row=buttonRow(title,"action")
                 self.rows[row:GetAddress()].id=id;self.rows[row:GetAddress()].field=field
             else error("unsupported settings control: " .. tostring(field.type)) end
-            add(self.content,row)
+            local slot=add(self.content,row)
+            if field.type=="action" then slot:SetHorizontalAlignment(1) end
         end
         self.rendering=false;status()
         mod:log("info","settings view populated: " .. id .. "; visual acceptance pending")
@@ -117,7 +132,7 @@ function M.start(mod,directory)
             StaticFindObject("/Script/UMG.Default__WidgetBlueprintLibrary"):SetInputMode_GameAndUIEx(self.pc,self.root,0,false,false)
             self.root:SetKeyboardFocus();self.pc.bShowMouseCursor=self.cursor
         end
-        self.widget=nil;self.error=nil;self.rows={};self.selectors={}
+        self.widget=nil;self.error=nil;self.rows={};self.selectors={};self.font_source=nil;self.font=nil
         self.selection_requested=nil
     end
     function self:open(root,pc,mode)
@@ -130,7 +145,10 @@ function M.start(mod,directory)
         self.widget.bIsFocusable=true
         local canvas=ui.child("CanvasPanel","CanvasPanel_43",self.widget)
         local border=ui.child("Border","Border_103",self.widget)
-        local font=ui.child("TextBlock","TextBlock_2",self.widget).Font
+        -- Font is a borrowed property, so its source keeps a native parent.
+        local font_source=ui.child("TextBlock","TextBlock_2",self.widget)
+        self.font_source=font_source
+        local font=font_source.Font
         font.Size=20
         self.font=font
         canvas:ClearChildren()
@@ -139,6 +157,9 @@ function M.start(mod,directory)
         slot:SetOffsets({Left=0,Top=0,Right=0,Bottom=0})
         local container=ui.native("VerticalBox",self.widget.WidgetTree)
         border:SetContent(container)
+        font_source:RemoveFromParent();font_source:SetVisibility(1)
+        add(container,font_source)
+        assert(font_source:GetParent():GetAddress()==container:GetAddress() and font_source:GetVisibility()==1,"settings font owner retention failed")
         add(container,label(self.mode=="info" and "Mod Info" or "Mod Settings"))
         local columns=ui.native("HorizontalBox",self.widget.WidgetTree)
         local columnSlot=add(container,columns);columnSlot:SetSize({Value=1,SizeRule=1})
@@ -229,7 +250,7 @@ function M.start(mod,directory)
         if key.KeyName:ToString()=="Escape" then self:close();return StaticFindObject("/Script/UMG.Default__WidgetBlueprintLibrary"):Handled() end
     end)
     mod:observe("settings acknowledgement",function()
-        model:poll();status()
+        model:poll();self:stageNumbers();status()
         local requested=self.selection_requested
         if requested and not model.pending and ui.valid(self.widget) and self.widget:IsInViewport() then
             self.selection_requested=nil

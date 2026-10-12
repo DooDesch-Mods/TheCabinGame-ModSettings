@@ -12,7 +12,7 @@ function M.start(directory,definition)
     if definition.register~=false then self.registry:register(definition,{
         read=function() return self.store:read() end,
         apply=function(values,action)
-            if self.apply then return self.apply(values,action) end
+            if self.apply then return self:apply(values,action) end
             assert(action == "","this mod has no settings actions")
             return self.store:save(values)
         end,
