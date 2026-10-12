@@ -8,7 +8,10 @@ function M.start(mod)
     local panel=require("settings_panel").start(mod)
     local state
     mod:bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Host_B_K2Node_ComponentBoundEvent_2_OnButtonPressedEvent__DelegateSignature",function(context)
-        if state and ui.valid(state.card) and context:get():GetAddress()==state.card:GetAddress() then panel:open(state.root,state.pc) end
+        if state and ui.valid(state.card) and context:get():GetAddress()==state.card:GetAddress() then
+            state.open_requested=true
+            mod:log("info","settings panel open requested")
+        end
     end)
     mod:observe("main menu card",function()
         local root
@@ -17,6 +20,10 @@ function M.start(mod)
         end
         if not root then state=nil;return end
         if state and state.root:GetAddress()==root:GetAddress() and ui.valid(state.card) then
+            if state.open_requested then
+                state.open_requested=nil
+                panel:open(state.root,state.pc)
+            end
             local hovered=state.card:IsHovered()
             if hovered then state.return_front=nil
             elseif state.hovered then state.return_front=true end
@@ -69,15 +76,11 @@ function M.start(mod)
         assert(ui.valid(capture) and capture.TextureTarget:GetAddress()==rt:GetAddress(),"settings card render target differs")
         capture.PrimitiveRenderMode=2;capture:ClearShowOnlyComponents();capture:ShowOnlyActorComponents(actor,true)
         local front,back=actor.Widget:GetWidget(),actor.WidgetBackside:GetWidget()
-        for index,renderer in ipairs({front,back}) do
-            assert(ui.valid(renderer),"settings card renderer missing")
-            renderer.Backside=index==2
-            renderer.VerticalBoxFront:SetVisibility(index==1 and 0 or 2)
-            renderer.VerticalBoxBack:SetVisibility(index==1 and 2 or 0)
-            ui.text(ui.child("TextBlock","Title_1",renderer),"Mod Settings")
-            renderer.VerticalBoxBack:SetVisibility(2)
-            renderer.VerticalBoxFront:SetVisibility(0)
-        end
+        assert(ui.valid(front) and ui.valid(back),"settings card renderer missing")
+        front.Backside=false
+        front.VerticalBoxBack:SetVisibility(2)
+        front.VerticalBoxFront:SetVisibility(0)
+        ui.text(ui.child("TextBlock","Title_1",front),"Mod Settings")
         local border=ui.child("Border","Border_42",card)
         border:SetBrushFromMaterial(asset("M_RT_MenuCardModSettings","object"))
         actor:FlipStart_E();capture:CaptureScene()
