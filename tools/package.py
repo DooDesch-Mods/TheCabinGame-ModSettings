@@ -11,6 +11,7 @@ CONFIG = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
 MOD = CONFIG["mod"]
 VERSION = CONFIG["version"]
 REQUIRED = {"single_mod", "settings", "gameplay", "multiplayer", "integration", "installation"}
+LOCAL_MENU_NOT_APPLICABLE = {"multiplayer", "single_mod"}
 
 
 def payload():
@@ -54,6 +55,13 @@ def require_acceptance(files=None):
     checks = acceptance.get("checks", {})
     for name in sorted(REQUIRED):
         check = checks.get(name, {})
+        if check.get("status") == "not_applicable":
+            if (MOD != "CabinModSettings" or name not in LOCAL_MENU_NOT_APPLICABLE or
+                    check.get("passed") is not False or
+                    not isinstance(check.get("rationale"), str) or not check["rationale"].strip() or
+                    not isinstance(check.get("evidence"), str) or not check["evidence"].strip()):
+                raise ValueError(f"invalid not_applicable acceptance: {name}")
+            continue
         if check.get("passed") is not True or not isinstance(check.get("evidence"), str) or not check["evidence"].strip():
             raise ValueError(f"missing passed acceptance with evidence: {name}")
 

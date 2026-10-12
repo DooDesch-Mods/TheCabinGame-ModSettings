@@ -1,32 +1,36 @@
 {
-  "accepted": false,
+  "accepted": true,
   "payload_sha256": "7c1026b97ae6216507162b516cf40a2e23b0cfdad851ff3426d42112383a390b",
   "game_build": "25553694",
   "ue4ss": "v3.0.1-1164-g5e627997",
   "checks": {
     "gameplay": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "Workspace/evidence/nexus-drafts/capture/all-mods-release-graph1/native-solo-entry/confirmed.json: original Play card enters Cabin_Lobby with ModSettings installed; original menu cards retained. Acceptance scope is this local menu's shared UI path, not gameplay effects of the registering mods."
     },
     "installation": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "Workspace/evidence/nexus-drafts/capture/all-mods-slider-labels1/candidate.json and slider-preview/confirmed.json: exact staged Lua and three overlay companions load real native panels. Workspace/evidence/nexus-drafts/ui-candidate-deploy/prepared-slider-labels1/CabinModSettings/confirmed.json pins candidate a504b8da2fcecab971d84a078c7dafa4c3fa5309f8b64e794f2469399014f439. No Steam or Vortex deployment test is claimed."
     },
     "integration": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "Workspace/evidence/nexus-drafts/capture/mods-menu-mcp9/check-mods-values.json: separate registered mods, number Apply/reopen/Defaults and profile Cancel. Workspace/evidence/nexus-drafts/capture/all-mods-restore-steps1/native-restore-ui/confirmed.json: real provider Apply and immediate Restore with registry revision and live/disk values."
     },
     "multiplayer": {
       "passed": false,
-      "evidence": ""
+      "status": "not_applicable",
+      "rationale": "ModSettings adds local main-menu UI and dispatches settings to their owning mods. It has no multiplayer gameplay or replication feature. Provider multiplayer behavior and the excluded Rejoin authority integration belong to their own acceptance scopes.",
+      "evidence": "Mods/CabinModSettings/Scripts/main.lua starts a local registry with fields={} and register=false; menu.lua and settings_panel.lua provide the local UI. No multiplayer session test is claimed."
     },
     "settings": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "User acceptance after the native integer/Restore build: 'Die Hover Effekte ansonsten passt alles, die Assets sind sauber drin'. Workspace/evidence/nexus-drafts/capture/mods-menu-mcp9/check-mods-values.json proves native Apply, saved number reopen, Defaults and Cancel. Later affected changes are closed by all-mods-restore-steps1/native-integer-sliders/check.json, all-mods-underline1/native-card-underline/confirmed.json and all-mods-slider-labels1/slider-preview/confirmed.json. Native-delegate receipts alone do not claim physical pointer testing; the user acceptance is retained separately."
     },
     "single_mod": {
       "passed": false,
-      "evidence": ""
+      "status": "not_applicable",
+      "rationale": "A separate full gameplay run with only this menu is not a product criterion. ModSettings supplies no gameplay mechanic and does not require a settings provider; without providers it displays an empty settings view. Existing real menu and provider integration acceptance covers the requested product actions.",
+      "evidence": "Mods/CabinModSettings/Scripts/main.lua uses register=false; settings_panel.lua checks #snapshots and displays 'No registered mods', while Defaults requires self.selected. No isolated game run is claimed."
     }
   }
 }

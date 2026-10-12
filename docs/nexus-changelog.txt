@@ -1,3 +1,5 @@
 [list]
-[*]Adds an optional Mod Settings card with Apply, Cancel and Defaults. Each installed, registered mod keeps its own settings file.
+[*]Adds a Mods card with separate Settings and Info windows.
+[*]Adjust supported mods with native buttons and sliders, Apply, Cancel and Defaults.
+[*]Info shows installed versions and HTTPS support links where supplied.
 [/list]
