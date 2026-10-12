@@ -49,6 +49,17 @@ function M.start(mod,directory)
             self.left:SetIsEnabled(not model.pending)
         end
     end
+    function self:stageNumbers()
+        if self.mode~="settings" or self.rendering or model.pending or self.selection_requested then return end
+        for _,record in pairs(self.rows) do
+            if record.role=="number" and ui.valid(record.widget) and record.widget:IsVisible() then
+                local bytes=record.widget.CheckBox_129:GetText():ToString()
+                local value=tonumber(bytes) or bytes
+                local draft=assert(model.drafts[record.id],"number row mod unavailable")
+                if draft.values[record.field.key]~=value then model:edit(record.id,record.field.key,value) end
+            end
+        end
+    end
     function self:select(id)
         assert(model.drafts[id],"selected mod unavailable")
         self.selected=id;self.rendering=true
@@ -182,7 +193,7 @@ function M.start(mod,directory)
         if self.rendering or model.pending then return end
         local record=self.rows[context:get():GetAddress()]
         if not record then return end
-        if record.role=="select" then self.selection_requested={id=record.id}
+        if record.role=="select" then self:stageNumbers();self.selection_requested={id=record.id}
         elseif record.role=="info_select" then self.selection_requested={name=record.name}
         elseif record.role=="support" then
             assert(ui.valid(StaticFindObject("/Script/Engine.KismetSystemLibrary:LaunchURL")),"support URL function unavailable")
@@ -201,17 +212,8 @@ function M.start(mod,directory)
         local record=self.rows[context:get():GetAddress()]
         if record then model:edit(record.id,record.field.key,value:get());status() end
     end)
-    mod:bind(NUMBER .. ":CabinTextChanged",function(context,text)
-        if self.rendering or model.pending then return end
-        local record=self.rows[context:get():GetAddress()]
-        if record then
-            local bytes=text:get():ToString()
-            local value=tonumber(bytes)
-            model:edit(record.id,record.field.key,value or bytes);status()
-        end
-    end)
     for _,entry in ipairs({
-        {"BndEvt__CabinSettingsPanel_Apply_B_K2Node_ComponentBoundEvent_13_OnButtonPressedEvent__DelegateSignature",function() model:applyAll();status() end},
+        {"BndEvt__CabinSettingsPanel_Apply_B_K2Node_ComponentBoundEvent_13_OnButtonPressedEvent__DelegateSignature",function() self:stageNumbers();model:applyAll();status() end},
         {"BndEvt__CabinSettingsPanel_Cancel_B_K2Node_ComponentBoundEvent_12_OnButtonPressedEvent__DelegateSignature",function() self:close() end},
         {"BndEvt__CabinSettingsPanel_Apply_B_1_K2Node_ComponentBoundEvent_3_OnButtonPressedEvent__DelegateSignature",function() if self.selected then model:defaults(self.selected);self.selection_requested={id=self.selected} end end},
     }) do

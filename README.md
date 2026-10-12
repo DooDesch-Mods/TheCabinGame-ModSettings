@@ -6,7 +6,7 @@ Adds a fourth main-menu card named **Mods**. Flip it to choose **Settings** or *
 
 Settings opens a separate window with a selector for each supported installed mod and **Apply**, **Cancel** and **Defaults**. Each mod keeps its own preferences. Info opens a separate window with installed mods, their actual versions and HTTPS support links where supplied. Missing version or support information is shown as unavailable.
 
-**Status: private test candidate. Game acceptance is pending. No public release yet.**
+**Status: test candidate. Game acceptance is pending. No public release yet.**
 
 Target: Steam build `25553694`, Unreal 5.5 and UE4SS `v3.0.1-1164-g5e627997`. Install UE4SS separately.
 
@@ -20,7 +20,7 @@ FastTurns and ShortEvents settings take effect next round and are controlled by 
 
 Close the game before removal. Remove only this mod's folder and its named container files, if included. Back up `Scripts/settings.dat` first to keep preferences. GraphicsProfiles does not restore graphics automatically on removal; use Restore previous before removal if required.
 
-Rejoin integration requires its matching layout/host-settings adapter and authority copies. That combined installation is private and unaccepted. Do not overwrite an active Rejoin runtime.
+Rejoin integration requires its matching layout/host-settings adapter and authority copies. That combined installation is unaccepted. Do not overwrite an active Rejoin runtime.
 
 ## Build and release
 

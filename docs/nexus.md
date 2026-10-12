@@ -6,7 +6,7 @@ Adds a **Mods** card to the main menu. Flip it to open **Settings** or **Info**.
 
 Settings opens a separate window with a selector for each supported installed mod and **Apply**, **Cancel** and **Defaults**. Each mod keeps its own preferences. Info opens a separate window with installed mods, their actual versions and HTTPS support links where supplied. Missing information is shown as unavailable.
 
-**Private test candidate. Game acceptance is pending. No public release yet.**
+**Test candidate. Game acceptance is pending. No public release yet.**
 
 ## Install
 
