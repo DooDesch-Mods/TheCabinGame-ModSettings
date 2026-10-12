@@ -15,7 +15,7 @@ end
 function M.child(class,name,parent)
     local found
     for _,value in ipairs(FindAllOf(class) or {}) do
-        if M.valid(value) and value:GetFName():ToString()==name and M.valid(value:GetOuter()) and M.valid(value:GetOuter():GetOuter()) and value:GetOuter():GetOuter():GetAddress()==parent:GetAddress() then
+        if M.valid(value) and value:GetFName():ToString():lower()==name:lower() and M.valid(value:GetOuter()) and M.valid(value:GetOuter():GetOuter()) and value:GetOuter():GetOuter():GetAddress()==parent:GetAddress() then
             assert(not found,"duplicate widget child: " .. name);found=value
         end
     end
@@ -35,10 +35,13 @@ function M.text(widget,value)
     widget:SetText(FText(value))
     assert(widget:GetText():ToString()==value,"UI text readback differs")
 end
-function M.buttonLabel(button,value)
+function M.buttonLabel(button,value,font)
     local found=false
     local function visit(widget)
-        if widget:IsA("/Script/UMG.TextBlock") then M.text(widget,value);found=true
+        if widget:IsA("/Script/UMG.TextBlock") then
+            M.text(widget,value)
+            if font then widget:SetFont(font) end
+            found=true
         elseif widget:IsA("/Script/UMG.PanelWidget") then
             for index=0,widget:GetChildrenCount()-1 do visit(widget:GetChildAt(index)) end
         end

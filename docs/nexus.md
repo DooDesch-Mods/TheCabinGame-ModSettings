@@ -2,21 +2,22 @@
 
 > 🛟 **Need help or found a bug?** Get support at [support.doodesch.de/modsettings](https://support.doodesch.de/modsettings).
 
-Adds an optional Mod Settings card with Apply, Cancel and Defaults. Each installed, registered mod keeps its own settings file.
+Adds a **Mods** card to the main menu. Flip it to open **Settings** or **Info**.
 
-**Status: private test candidate. Game acceptance is pending. No public release yet.**
+Settings opens a separate window with a selector for each supported installed mod and **Apply**, **Cancel** and **Defaults**. Each mod keeps its own preferences. Info opens a separate window with installed mods, their actual versions and HTTPS support links where supplied. Missing information is shown as unavailable.
 
-Target: Steam build `25553694`, Unreal 5.5 and UE4SS `v3.0.1-1164-g5e627997`. Install UE4SS separately.
+**Private test candidate. Game acceptance is pending. No public release yet.**
 
-1. Close the game and install the required UE4SS runtime in your private test copy.
-2. Copy `Mods/CabinModSettings` into `the_cabin_game/Binaries/Win64/ue4ss/Mods`.
-3. Copy the archive's `the_cabin_game/Content/Paks/~mods` files to the same path in your game folder. Keep the three container files together.
+## Install
 
-CabinModSettings is optional. Each function mod uses its defaults and its own validated settings file without the Settings card. GraphicsProfiles supplies profile templates without the Settings card and never applies a profile on startup.
+1. Close the game and install [UE4SS for the cabin game](https://www.nexusmods.com/thecabingame/mods/4).
+2. Copy `Mods/CabinModSettings` from the ZIP into `the_cabin_game/Binaries/Win64/ue4ss/Mods`.
+3. Copy the ZIP's `the_cabin_game/Content/Paks/~mods` files into the matching game folder. Keep the `.pak`, `.utoc` and `.ucas` files together.
 
-FastTurns and ShortEvents settings take effect next round and are controlled by the host. FastTurns requires its Lua and overlay on every participating client. Other settings are local. Multiplayer acceptance is pending.
+CabinModSettings is optional for the individual mods. FastTurns and ShortEvents settings take effect next round and are controlled by the host. FastTurns requires its Lua and overlay on every participating client. Other settings are local. Multiplayer acceptance is pending.
 
-Close the game before removal. Remove only this mod's folder and its named container files, if included. Back up `Scripts/settings.dat` first to keep preferences. GraphicsProfiles does not restore graphics automatically on removal; use Restore previous before removal if required.
+## Remove
 
-Rejoin integration requires its matching layout/host-settings adapter and authority copies. That combined installation is private and unaccepted. Do not overwrite an active Rejoin runtime.
+Close the game and remove this mod's folder and its named files from `Content/Paks/~mods`. Back up `Scripts/settings.dat` first to keep your preferences.
 
+By DooDesch.

@@ -3,16 +3,18 @@ local M={}
 local PREFIX="/Game/CabinModSettings/"
 local CARD=PREFIX .. "MenuCardModSettings_WBP.MenuCardModSettings_WBP_C"
 local function asset(name,kind) return ui.load(PREFIX .. name .. "." .. name .. (kind=="class" and "_C" or ""),kind) end
-function M.start(mod)
+function M.start(mod,directory)
     if os.getenv("CABIN_REJOIN_PROCESS_ID") then mod:log("info","settings UI skipped for Rejoin authority");return end
-    local panel=require("settings_panel").start(mod)
+    local panel=require("settings_panel").start(mod,directory)
     local state
-    mod:bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Host_B_K2Node_ComponentBoundEvent_2_OnButtonPressedEvent__DelegateSignature",function(context)
+    local function request(context,mode)
         if state and ui.valid(state.card) and context:get():GetAddress()==state.card:GetAddress() then
-            state.open_requested=true
-            mod:log("info","settings panel open requested")
+            state.open_requested=mode
+            mod:log("info",mode .. " panel open requested")
         end
-    end)
+    end
+    mod:bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Single_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) request(context,"settings") end)
+    mod:bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Host_B_K2Node_ComponentBoundEvent_2_OnButtonPressedEvent__DelegateSignature",function(context) request(context,"info") end)
     mod:observe("main menu card",function()
         local root
         for _,value in ipairs(FindAllOf("Menu_WBP_C") or {}) do
@@ -21,8 +23,9 @@ function M.start(mod)
         if not root then state=nil;return end
         if state and state.root:GetAddress()==root:GetAddress() and ui.valid(state.card) then
             if state.open_requested then
+                local mode=state.open_requested
                 state.open_requested=nil
-                panel:open(state.root,state.pc)
+                panel:open(state.root,state.pc,mode)
             end
             local hovered=state.card:IsHovered()
             if hovered then state.return_front=nil
@@ -60,10 +63,11 @@ function M.start(mod)
         assert(gap>0,"original card spacing invalid")
         transform.Translation.Y=transform.Translation.Y+3*gap
         local card=ui.create(CARD,root,pc)
-        for _,name in ipairs({"Single_B","Join_B","Single_Progressbar","Join_Progressbar"}) do
+        for _,name in ipairs({"Join_B","Single_Progressbar","Join_Progressbar"}) do
             assert(ui.valid(card[name]),"unused menu control missing");card[name]:SetVisibility(2)
         end
-        card.Host_B:SetVisibility(2)
+        card.Single_B:SetVisibility(0)
+        card.Host_B:SetVisibility(0)
         local gameplay=StaticFindObject("/Script/Engine.Default__GameplayStatics")
         local actorClass=asset("MenuCard_ModSettings","class")
         local actor=gameplay:BeginDeferredActorSpawnFromClass(root,actorClass,transform,1,nil,0)
@@ -75,12 +79,23 @@ function M.start(mod)
         local capture=actor.SceneCaptureComponent2D
         assert(ui.valid(capture) and capture.TextureTarget:GetAddress()==rt:GetAddress(),"settings card render target differs")
         capture.PrimitiveRenderMode=2;capture:ClearShowOnlyComponents();capture:ShowOnlyActorComponents(actor,true)
-        local front,back=actor.Widget:GetWidget(),actor.WidgetBackside:GetWidget()
+        local front=actor.Widget:GetWidget()
+        assert(ui.valid(front),"settings front renderer missing")
+        local rendererPath=assert(front:GetClass():GetFullName():match("^[^ ]+ (.+)$"),"renderer class path unavailable")
+        actor.WidgetBackside:SetWidget(ui.create(rendererPath,root,pc))
+        local back=actor.WidgetBackside:GetWidget()
         assert(ui.valid(front) and ui.valid(back),"settings card renderer missing")
-        front.Backside=false
-        front.VerticalBoxBack:SetVisibility(2)
-        front.VerticalBoxFront:SetVisibility(0)
-        ui.text(ui.child("TextBlock","Title_1",front),"Mod Settings")
+        assert(front:GetAddress()~=back:GetAddress() and front:GetClass():GetAddress()==back:GetClass():GetAddress(),"settings renderer instances/class differ")
+        for index,renderer in ipairs({front,back}) do
+            renderer.Backside=index==2
+            renderer.VerticalBoxFront:SetVisibility(index==1 and 0 or 2)
+            renderer.VerticalBoxBack:SetVisibility(index==1 and 2 or 0)
+            ui.text(ui.child("TextBlock","Title_1",renderer),"Mods")
+            ui.text(ui.child("TextBlock","Single_T",renderer),"Settings")
+            ui.text(ui.child("TextBlock","Host_T",renderer),"Info")
+            ui.child("TextBlock","JoinT",renderer):SetVisibility(1)
+            ui.child("Image","Image_1",renderer):SetVisibility(1)
+        end
         local border=ui.child("Border","Border_42",card)
         border:SetBrushFromMaterial(asset("M_RT_MenuCardModSettings","object"))
         actor:FlipStart_E();capture:CaptureScene()
