@@ -4,6 +4,9 @@ local PANEL="/Game/CabinModSettings/CabinSettingsPanel.CabinSettingsPanel_C"
 local CHOICE="/Game/CabinModSettings/CabinChoiceRow.CabinChoiceRow_C"
 local BOOL="/Game/CabinModSettings/CabinBoolRow.CabinBoolRow_C"
 local NUMBER="/Game/CabinModSettings/CabinNumberRow.CabinNumberRow_C"
+local SELECTOR="/Game/CabinModSettings/CabinSelectorRow.CabinSelectorRow_C"
+local ACTION="/Game/CabinModSettings/CabinActionRow.CabinActionRow_C"
+local DEFAULTS="/Game/CabinModSettings/CabinDefaultsRow.CabinDefaultsRow_C"
 local function numberLabel(field,value)
     local display=field.display=="percent" and value*100 or value
     return string.format("%.2f",display):gsub("0+$",""):gsub("%.$","") .. (field.display=="percent" and " %" or "")
@@ -23,32 +26,28 @@ function M.start(mod,directory)
         return slot
     end
     local function buttonRow(text,role)
-        local row=ui.create(CHOICE,self.root,self.pc)
-        row.RightArrow_B:SetVisibility(1);row.OptionType_T:SetVisibility(1)
-        local title=row.SlotTitle_T
-        title:RemoveFromParent();row.LeftArrow_B:SetContent(title)
-        title:SetFont(self.font);title:SetAutoWrapText(role~="action")
-        row.LeftArrow_B:SetRenderScale({X=1,Y=1})
-        local box=row.LeftArrow_B:GetParent()
-        box:ClearChildren()
-        box:AddChildToHorizontalBox(row.LeftArrow_B):SetSize({Value=1,SizeRule=role=="action" and 0 or 1})
-        row.LeftArrow_B.Slot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
-        title.Slot:SetPadding({Left=8,Top=6,Right=8,Bottom=6})
-        title.Slot:SetHorizontalAlignment(1)
-        local border=ui.child("Border","Invert_13",row)
-        border:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
-        border.Slot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
-        ui.child("VerticalBox","VerticalBox_45",row).Slot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
-        for _,brush in ipairs({"Normal","Hovered","Pressed","Disabled"}) do row.LeftArrow_B.WidgetStyle[brush].DrawAs=0 end
+        local selector=role=="select" or role=="info_select"
+        local row=ui.create(selector and SELECTOR or ACTION,self.root,self.pc)
+        local title=ui.child("TextBlock",selector and "TextBlock_41" or "TextBlock_74",row)
         ui.text(title,text)
         self.rows[row:GetAddress()]={widget=row,role=role}
         return row
+    end
+    local function selectedUnderline(key,value)
+        for _,row in ipairs(self.selectors) do
+            local record=assert(self.rows[row:GetAddress()],"selector record unavailable")
+            row:StopAnimation(row.gameplayprogress)
+            local percent=record[key]==value and 1 or 0
+            row.gameplay_progressbar:SetPercent(percent)
+            assert(row.gameplay_progressbar.Percent==percent,"selector underline readback differs")
+        end
     end
     local function status()
         if ui.valid(self.error) then
             ui.text(self.error,model.error or (model.pending and "Applying settings" or ""))
             self.widget.Apply_B:SetIsEnabled(not model.pending)
             self.widget.DeleteSave_B:SetIsEnabled(not model.pending)
+            if ui.valid(self.defaults) then self.defaults.Apply_B:SetIsEnabled(not model.pending) end
             self.content:SetIsEnabled(not model.pending)
             self.left:SetIsEnabled(not model.pending)
         end
@@ -70,6 +69,7 @@ function M.start(mod,directory)
     function self:select(id)
         assert(model.drafts[id],"selected mod unavailable")
         self.selected=id;self.rendering=true
+        selectedUnderline("id",id)
         self.content:ClearChildren()
         for address,record in pairs(self.rows) do if record.role~="select" then self.rows[address]=nil end end
         local draft=model.drafts[id]
@@ -115,6 +115,8 @@ function M.start(mod,directory)
     end
     function self:selectInfo(name)
         local info=assert(self.info[name],"installed mod info unavailable")
+        self.info_selected=name
+        selectedUnderline("name",name)
         self.content:ClearChildren()
         for address,record in pairs(self.rows) do if record.role~="info_select" then self.rows[address]=nil end end
         add(self.content,label(info.name))
@@ -122,7 +124,7 @@ function M.start(mod,directory)
         if info.support then
             local row=buttonRow(info.support,"support")
             self.rows[row:GetAddress()].url=info.support
-            add(self.content,row)
+            add(self.content,row):SetHorizontalAlignment(1)
         else add(self.content,label("Support link not provided")) end
     end
     function self:close()
@@ -133,7 +135,7 @@ function M.start(mod,directory)
             self.root:SetKeyboardFocus();self.pc.bShowMouseCursor=self.cursor
         end
         self.widget=nil;self.error=nil;self.rows={};self.selectors={};self.font_source=nil;self.font=nil
-        self.selection_requested=nil
+        self.selection_requested=nil;self.info_selected=nil;self.defaults=nil
     end
     function self:open(root,pc,mode)
         assert(not model.pending,"previous settings apply still pending")
@@ -163,7 +165,7 @@ function M.start(mod,directory)
         add(container,label(self.mode=="info" and "Mod Info" or "Mod Settings"))
         local columns=ui.native("HorizontalBox",self.widget.WidgetTree)
         local columnSlot=add(container,columns);columnSlot:SetSize({Value=1,SizeRule=1})
-        local leftSize=ui.native("SizeBox",self.widget.WidgetTree);leftSize:SetWidthOverride(280)
+        local leftSize=ui.native("SizeBox",self.widget.WidgetTree);leftSize:SetMinDesiredWidth(280)
         local leftScroll=ui.native("ScrollBox",self.widget.WidgetTree)
         self.left=ui.native("VerticalBox",self.widget.WidgetTree)
         leftScroll:AddChild(self.left);leftSize:SetContent(leftScroll);columns:AddChildToHorizontalBox(leftSize)
@@ -181,22 +183,32 @@ function M.start(mod,directory)
                 self.info[entry.name]=entry
                 local row=buttonRow(entry.name,"info_select")
                 self.rows[row:GetAddress()].name=entry.name
-                self.selectors[#self.selectors+1]=row;add(self.left,row)
+                self.selectors[#self.selectors+1]=row;add(self.left,row):SetHorizontalAlignment(1)
             end
         else
             for _,snapshot in ipairs(snapshots) do
                 local id=snapshot.definition.id
                 local row=buttonRow(snapshot.definition.name,"select")
                 self.rows[row:GetAddress()].id=id;self.selectors[#self.selectors+1]=row
-                add(self.left,row)
+                add(self.left,row):SetHorizontalAlignment(1)
             end
         end
         self.error=label("");self.error:SetAutoWrapText(true);add(container,self.error)
         local footer=ui.native("HorizontalBox",self.widget.WidgetTree)
-        for _,entry in ipairs({{self.widget.Apply_B,"Apply"},{self.widget.Cancel_B,"Cancel"},{self.widget.DeleteSave_B,"Defaults"}}) do
-            entry[1]:RemoveFromParent();ui.buttonLabel(entry[1],entry[2],self.font)
+        for _,entry in ipairs({{self.widget.Apply_B,"Apply"},{self.widget.Cancel_B,"Cancel"}}) do
+            entry[1]:RemoveFromParent();ui.buttonLabel(entry[1],entry[2])
             footer:AddChildToHorizontalBox(entry[1]):SetPadding({Left=0,Top=4,Right=16,Bottom=4})
-            for _,brush in ipairs({"Normal","Hovered","Pressed","Disabled"}) do entry[1].WidgetStyle[brush].DrawAs=0 end
+        end
+        self.widget.DeleteSave_B:RemoveFromParent()
+        self.defaults=nil
+        if self.mode=="settings" then
+            local spacer=ui.native("Spacer",self.widget.WidgetTree)
+            footer:AddChildToHorizontalBox(spacer):SetSize({Value=1,SizeRule=1})
+            self.defaults=ui.create(DEFAULTS,root,pc)
+            ui.text(ui.child("TextBlock","TextBlock_56",self.defaults),"Defaults")
+            local defaultsSlot=footer:AddChildToHorizontalBox(self.defaults)
+            defaultsSlot:SetSize({Value=1,SizeRule=0})
+            defaultsSlot:SetPadding({Left=0,Top=4,Right=0,Bottom=4})
         end
         add(container,footer)
         if self.mode=="info" then
@@ -211,7 +223,7 @@ function M.start(mod,directory)
         mod:log("info","settings panel attached; input and visual acceptance pending")
     end
     local function rowPressed(context,direction)
-        if self.rendering or model.pending then return end
+        if self.rendering or model.pending or not ui.valid(self.widget) or not self.widget:IsInViewport() then return end
         local record=self.rows[context:get():GetAddress()]
         if not record then return end
         if record.role=="select" then self:stageNumbers();self.selection_requested={id=record.id}
@@ -228,18 +240,54 @@ function M.start(mod,directory)
     end
     mod:bind(CHOICE .. ":BndEvt__CabinChoiceRow_LeftArrow_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,-1) end)
     mod:bind(CHOICE .. ":BndEvt__CabinChoiceRow_RightArrow_B_K2Node_ComponentBoundEvent_1_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,1) end)
+    mod:bind(SELECTOR .. ":BndEvt__CabinSelectorRow_Gameplay_B_K2Node_ComponentBoundEvent_4_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,0) end)
+    mod:bind(ACTION .. ":BndEvt__CabinActionRow_ResetInputs_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,0) end)
+    for _,entry in ipairs({{1,true},{2,false}}) do
+        mod:bind(SELECTOR .. ":BndEvt__CabinSelectorRow_Gameplay_B_K2Node_ComponentBoundEvent_" .. entry[1] .. "_OnButtonHoverEvent__DelegateSignature",function(context)
+            if self.rendering or model.pending or not ui.valid(self.widget) or not self.widget:IsInViewport() then return end
+            local record=self.rows[context:get():GetAddress()]
+            if not record or (record.role~="select" and record.role~="info_select") then return end
+            local row=record.widget
+            if row.gameplay_progressbar.Percent==1 and ((record.role=="select" and record.id==self.selected) or (record.role=="info_select" and record.name==self.info_selected)) then return end
+            if entry[2] then row:QueuePlayAnimation(row.gameplayprogress,0,1,0,3,false)
+            else row:QueuePlayAnimationReverse(row.gameplayprogress,3,false) end
+        end)
+    end
     mod:bind(BOOL .. ":BndEvt__CabinBoolRow_CheckBox_129_K2Node_ComponentBoundEvent_2_OnCheckBoxComponentStateChanged__DelegateSignature",function(context,value)
         if self.rendering or model.pending then return end
         local record=self.rows[context:get():GetAddress()]
         if record then model:edit(record.id,record.field.key,value:get());status() end
     end)
+    local function defaults()
+        if self.mode=="settings" and self.selected and not self.rendering and not model.pending then
+            model:defaults(self.selected);self.selection_requested={id=self.selected}
+        end
+    end
+    for _,entry in ipairs({
+        {13,"OnButtonPressedEvent",function() defaults() end},
+        {14,"OnButtonHoverEvent",function() self.defaults:QueuePlayAnimationForward(self.defaults.ApplyProgress,2,false) end},
+        {15,"OnButtonHoverEvent",function() self.defaults:QueuePlayAnimationReverse(self.defaults.ApplyProgress,2.5,false) end},
+    }) do
+        local path=":BndEvt__CabinDefaultsRow_Apply_B_K2Node_ComponentBoundEvent_" .. entry[1] .. "_" .. entry[2] .. "__DelegateSignature"
+        mod:bind(DEFAULTS .. path,function(context)
+            if ui.valid(self.widget) and self.widget:IsInViewport() and ui.valid(self.defaults) and context:get():GetAddress()==self.defaults:GetAddress() then entry[3]() end
+        end)
+    end
     for _,entry in ipairs({
         {"BndEvt__CabinSettingsPanel_Apply_B_K2Node_ComponentBoundEvent_13_OnButtonPressedEvent__DelegateSignature",function() self:stageNumbers();model:applyAll();status() end},
         {"BndEvt__CabinSettingsPanel_Cancel_B_K2Node_ComponentBoundEvent_12_OnButtonPressedEvent__DelegateSignature",function() self:close() end},
-        {"BndEvt__CabinSettingsPanel_Apply_B_1_K2Node_ComponentBoundEvent_3_OnButtonPressedEvent__DelegateSignature",function() if self.selected then model:defaults(self.selected);self.selection_requested={id=self.selected} end end},
+        {"BndEvt__CabinSettingsPanel_Apply_B_1_K2Node_ComponentBoundEvent_3_OnButtonPressedEvent__DelegateSignature",defaults},
     }) do
         mod:bind(PANEL .. ":" .. entry[1],function(context)
             if ui.valid(self.widget) and context:get():GetAddress()==self.widget:GetAddress() then entry[2]() end
+        end)
+    end
+    for _,entry in ipairs({{14,"Apply_B","ApplyProgress",true},{15,"Apply_B","ApplyProgress",false},{16,"Cancel_B","CancelProgress",true},{17,"Cancel_B","CancelProgress",false}}) do
+        local path=":BndEvt__CabinSettingsPanel_" .. entry[2] .. "_K2Node_ComponentBoundEvent_" .. entry[1] .. "_OnButtonHoverEvent__DelegateSignature"
+        mod:bind(PANEL .. path,function(context)
+            if not ui.valid(self.widget) or not self.widget:IsInViewport() or context:get():GetAddress()~=self.widget:GetAddress() then return end
+            if entry[4] then self.widget:QueuePlayAnimationForward(self.widget[entry[3]],2,false)
+            else self.widget:QueuePlayAnimationReverse(self.widget[entry[3]],2.5,false) end
         end)
     end
     mod:bind("/Script/UMG.UserWidget:OnPreviewKeyDown",function(context,geometry,event)
