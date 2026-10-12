@@ -34,14 +34,21 @@ function M.start(mod,directory)
             if layout.waits==1 then mod:log("info","settings hover layout waiting: native text desired width is zero") end
             return
         end
+        local referenceSlot=layout.reference_button.Slot
+        local referenceSize,referencePosition=referenceSlot:GetSize(),referenceSlot:GetPosition()
+        local referencePadding=layout.reference_button.WidgetStyle.NormalPadding
+        local referenceContent=referenceSize.X-referencePadding.Left-referencePadding.Right
+        assert(referenceContent>0,"settings hover reference content width invalid: Social Credits")
+        local center=referencePosition.X+referenceSize.X/2
         for index,entry in ipairs(layout.entries) do
             local slot=state.card[entry.button].Slot
             assert(ui.valid(slot) and slot:IsA("/Script/UMG.CanvasPanelSlot"),"settings hover canvas slot unavailable: " .. entry.button)
             local size,position=slot:GetSize(),slot:GetPosition()
-            -- Match Social Credits while preserving each option's native center.
-            local width=layout.reference_button.Slot:GetSize().X*measured[index]/measured.reference
+            -- Button padding stays fixed while the native underline content follows the text.
+            local padding=state.card[entry.button].WidgetStyle.NormalPadding
+            local width=padding.Left+padding.Right+referenceContent*measured[index]/measured.reference
             assert(width>0 and width<math.huge,"settings hover button width invalid: " .. entry.button)
-            local left=position.X+(size.X-width)/2
+            local left=center-width/2
             slot:SetSize({X=width,Y=size.Y})
             slot:SetPosition({X=left,Y=position.Y})
             local observedSize,observedPosition=slot:GetSize(),slot:GetPosition()
