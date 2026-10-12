@@ -13,8 +13,25 @@ from lupa.lua54 import LuaRuntime
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT.parents[2]
 SCRIPTS = ROOT / "Mods/CabinModSettings/Scripts"
-FAST = WORKSPACE / "mods/CabinFastTurns/repository/Mods/CabinFastTurns/Scripts/definition.lua"
-SHORT = WORKSPACE / "mods/CabinShortEvents/repository/Mods/CabinShortEvents/Scripts/definition.lua"
+DEFINITIONS = ROOT / "tests/fixtures/slider-definitions"
+FAST = DEFINITIONS / "fast.lua"
+SHORT = DEFINITIONS / "short.lua"
+
+
+def definition_source_checks():
+    comparisons = []
+    for name, fixture in (("CabinFastTurns", FAST), ("CabinShortEvents", SHORT)):
+        source = WORKSPACE / "mods" / name / "repository/Mods" / name / "Scripts/definition.lua"
+        if source.is_file():
+            if fixture.read_bytes() != source.read_bytes():
+                raise AssertionError(f"slider definition fixture differs from workspace source: {name}")
+            status = "byte-identical"
+            print(f"info: slider definition fixture matches workspace source: {name}")
+        else:
+            status = "optional workspace comparison skipped; repository fixture remains active"
+            print(f"info: optional slider source comparison skipped: {name} sibling repository absent; all callback cases use repository fixtures")
+        comparisons.append({"mod": name, "fixture": str(fixture), "fixture_sha256": hashlib.sha256(fixture.read_bytes()).hexdigest(), "workspace_source": str(source), "comparison": status})
+    return comparisons
 
 FIXTURE = r'''
 package.path=scripts.."/?.lua;"..package.path
@@ -238,6 +255,7 @@ class SliderBehavior(unittest.TestCase):
 
 
 def run(evidence_dir=None):
+    comparisons = definition_source_checks()
     stream = io.StringIO()
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(SliderBehavior)
     result = unittest.TextTestRunner(stream=stream, verbosity=2).run(suite)
@@ -256,7 +274,8 @@ def run(evidence_dir=None):
             "failures": [{"test": str(test), "cause": cause} for test, cause in result.failures],
             "errors": [{"test": str(test), "cause": cause} for test, cause in result.errors],
             "source_sha256": {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources},
-            "ui_boundary": "mock native Slider rounds values to IEEE754 float32; shipped settings_panel/cabin_panel/validators/definitions are unmodified",
+            "definition_fixtures": comparisons,
+            "ui_boundary": "mock native Slider rounds values to IEEE754 float32; shipped settings_panel/cabin_panel/validators are unmodified; repository definition snapshots remain active without sibling repositories",
             "game_acceptance": False,
         }
         (evidence_dir / "result.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
