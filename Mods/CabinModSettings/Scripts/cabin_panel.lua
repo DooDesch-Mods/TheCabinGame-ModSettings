@@ -18,6 +18,21 @@ function M.new(registry, clock)
         draft.action = ""
         self.error = nil
     end
+    function self:refresh(id)
+        local draft=assert(self.drafts[id],"mod unavailable")
+        if draft.dirty then return end
+        for _,snapshot in ipairs(registry:list()) do
+            if snapshot.definition.id==id then
+                -- An acknowledgement can be newer than the last published snapshot.
+                if snapshot.revision>=draft.snapshot.revision then
+                    draft.snapshot=snapshot
+                    draft.values=codec.copy(snapshot.values)
+                end
+                return
+            end
+        end
+        error("selected mod no longer registered: "..id)
+    end
     function self:defaults(id)
         assert(not self.pending,"settings apply still pending")
         local draft = assert(self.drafts[id],"mod unavailable")

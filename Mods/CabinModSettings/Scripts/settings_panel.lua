@@ -67,6 +67,7 @@ function M.start(mod,directory)
                     local readback=record.widget.Slider:GetValue()
                     assert(math.abs(readback-snapped)<=step/10000,"slider step readback differs: " .. record.field.key .. "; observed=" .. tostring(readback) .. "; required=" .. tostring(snapped))
                     value=snapped
+                    if record.field.integer then value=assert(math.tointeger(value),"integer slider value unavailable: " .. record.field.key) end
                     ui.text(record.widget.SliderAmount,numberLabel(record.field,value))
                     model:edit(record.id,record.field.key,value)
                     record.last_read=readback
@@ -76,6 +77,7 @@ function M.start(mod,directory)
     end
     function self:select(id)
         assert(model.drafts[id],"selected mod unavailable")
+        model:refresh(id)
         self.selected=id;self.rendering=true
         selectedUnderline("id",id)
         self.content:ClearChildren()
@@ -127,7 +129,11 @@ function M.start(mod,directory)
                 self.rows[row:GetAddress()].id=id;self.rows[row:GetAddress()].field=field
             else error("unsupported settings control: " .. tostring(field.type)) end
             local slot=add(self.content,row)
-            if field.type=="action" then slot:SetHorizontalAlignment(1) end
+            if field.type=="action" then
+                slot:SetHorizontalAlignment(1)
+                -- Native action captions extend below the widget's desired height.
+                slot:SetPadding({Left=12,Top=8,Right=12,Bottom=80})
+            end
         end
         self.rendering=false;status()
         mod:log("info","settings view populated: " .. id .. "; visual acceptance pending")

@@ -175,6 +175,18 @@ class SliderBehavior(unittest.TestCase):
         assert(#requests==0,"unchanged float32 control caused a save")
         ''')
 
+    def test_selection_refreshes_clean_snapshot_but_keeps_pending_edits(self):
+        self.vm.execute(r'''
+        saved.cabin_fast_turns.speed=3;revisions.cabin_fast_turns=2
+        select_mod("cabin_fast_turns")
+        local draft=panel.model.drafts.cabin_fast_turns
+        assert(draft.values.speed==3 and draft.snapshot.revision==2)
+        number_row("speed").widget.Slider:drag(4);panel:stageNumbers()
+        saved.cabin_fast_turns.speed=5;revisions.cabin_fast_turns=3
+        select_mod("cabin_fast_turns")
+        assert(draft.values.speed==4 and draft.snapshot.revision==2 and draft.dirty)
+        ''')
+
     def test_drag_percent_and_apply_dispatch_once(self):
         self.vm.execute(r'''
         select_mod("cabin_short_events")
@@ -291,6 +303,18 @@ class SliderBehavior(unittest.TestCase):
             chair.widget.Slider:drag(bound);click("apply");tick()
             assert(saved.cabin_chair_marker.size==bound)
         end
+        ''')
+
+    def test_declared_integer_slider_survives_float32_ui_and_validation(self):
+        self.vm.execute(r'''
+        local definition=definitions[1]
+        for _,field in ipairs(definition.fields) do if field.key=="speed" then field.integer=true end end
+        panel.model:open();select_mod("cabin_fast_turns")
+        number_row("speed").widget.Slider:drag(3.49)
+        click("apply")
+        assert(panel.model.error==nil,tostring(panel.model.error))
+        assert(#requests==1 and math.type(requests[1].values.speed)=="integer")
+        assert(saved.cabin_fast_turns.speed==3)
         ''')
 
     def test_percent_steps_quantize_native_value_and_save_whole_percent(self):

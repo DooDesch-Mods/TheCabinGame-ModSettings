@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 - 2026-10-13
+
+### Fixed
+
+- Convert declared integer sliders to Lua integers before validation and saving.
+- Refresh unchanged settings when selecting a provider after another provider changes them.
+- Keep the final native action caption visible at the bottom of a scrolled settings panel.
+
 ## 0.1.1 - 2026-10-13
 
 ### Fixed
