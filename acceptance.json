@@ -1,20 +1,20 @@
 {
   "accepted": true,
-  "payload_sha256": "7c1026b97ae6216507162b516cf40a2e23b0cfdad851ff3426d42112383a390b",
+  "payload_sha256": "c3c4221cdc51487cf56decf301c8b1cd3dc9a350876a706710da9bf3df0e8086",
   "game_build": "25553694",
   "ue4ss": "v3.0.1-1164-g5e627997",
   "checks": {
     "gameplay": {
       "passed": true,
-      "evidence": "Workspace/evidence/nexus-drafts/capture/all-mods-release-graph1/native-solo-entry/confirmed.json: original Play card enters Cabin_Lobby with ModSettings installed; original menu cards retained. Acceptance scope is this local menu's shared UI path, not gameplay effects of the registering mods."
+      "evidence": "Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/host/modsettings-host-visibility-return2/report.json: exact 0.1.1 original Host/Join hide, acknowledged original Back callbacks and native card return; Mods mirrors Social. Original Settings and Mod Settings open/close remain normal. NullRHI original modal animation completion/rendering is not claimed. Unchanged 0.1.0 shared paths: Workspace/evidence/nexus-drafts/settings-host-card-visibility1/receipt.json at prior_acceptance_0_1_0/checks/gameplay."
     },
     "installation": {
       "passed": true,
-      "evidence": "Workspace/evidence/nexus-drafts/capture/all-mods-slider-labels1/candidate.json and slider-preview/confirmed.json: exact staged Lua and three overlay companions load real native panels. Workspace/evidence/nexus-drafts/ui-candidate-deploy/prepared-slider-labels1/CabinModSettings/confirmed.json pins candidate a504b8da2fcecab971d84a078c7dafa4c3fa5309f8b64e794f2469399014f439. No Steam or Vortex deployment test is claimed."
+      "evidence": "Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/prepared.json selects frozen 5bbd3297e912ac33e8adadb9eba947265dcd6ae60009aa3f3b4cf4e969f5fcfd; exact installed Lua/mod-info and three original overlay companions match primary payload c3c4221cdc51487cf56decf301c8b1cd3dc9a350876a706710da9bf3df0e8086. Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/host/modsettings-host-visibility-return2/report.json confirms native UI loaded the candidate. No Steam/Vortex deployment claim."
     },
     "integration": {
       "passed": true,
-      "evidence": "Workspace/evidence/nexus-drafts/capture/mods-menu-mcp9/check-mods-values.json: separate registered mods, number Apply/reopen/Defaults and profile Cancel. Workspace/evidence/nexus-drafts/capture/all-mods-restore-steps1/native-restore-ui/confirmed.json: real provider Apply and immediate Restore with registry revision and live/disk values."
+      "evidence": "Workspace/evidence/nexus-drafts/settings-host-card-visibility1/receipt.json at prior_acceptance_0_1_0/checks/integration retains the genuine unchanged provider/store/registry evidence. All those runtime sources and overlay bytes match the accepted 0.1.0 candidate."
     },
     "multiplayer": {
       "passed": false,
@@ -24,7 +24,7 @@
     },
     "settings": {
       "passed": true,
-      "evidence": "User acceptance after the native integer/Restore build: 'Die Hover Effekte ansonsten passt alles, die Assets sind sauber drin'. Workspace/evidence/nexus-drafts/capture/mods-menu-mcp9/check-mods-values.json proves native Apply, saved number reopen, Defaults and Cancel. Later affected changes are closed by all-mods-restore-steps1/native-integer-sliders/check.json, all-mods-underline1/native-card-underline/confirmed.json and all-mods-slider-labels1/slider-preview/confirmed.json. Native-delegate receipts alone do not claim physical pointer testing; the user acceptance is retained separately."
+      "evidence": "Workspace/evidence/nexus-drafts/settings-host-card-visibility1/receipt.json at prior_acceptance_0_1_0/checks/settings retains unchanged user-approved assets/hover and native Apply/reopen/Defaults/Cancel. Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/host/modsettings-host-visibility-return2/report.json confirms affected 0.1.1 main-menu/card/Settings callback paths; no new pointer/rendering test is claimed."
     },
     "single_mod": {
       "passed": false,

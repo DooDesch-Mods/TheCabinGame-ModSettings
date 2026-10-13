@@ -1,5 +1,3 @@
 [list]
-[*]Adds a Mods card with separate Settings and Info windows.
-[*]Adjust supported mods with native buttons and sliders, Apply, Cancel and Defaults.
-[*]Info shows installed versions and HTTPS support links where supplied.
+[*]Fixes the Mods card staying visible when the original main-menu cards hide, including the Host dialog.
 [/list]

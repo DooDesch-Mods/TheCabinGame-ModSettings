@@ -8,6 +8,34 @@ function M.start(mod,directory)
     local panel=require("settings_panel").start(mod,directory)
     local state
     local intro_waiting
+    local function syncVisibility()
+        local reference=state.root.MenuCardSocial_WBP
+        assert(ui.valid(reference) and ui.valid(reference.Social_Card),"settings card original Social visibility target unavailable")
+        local parent,ownParent=reference:GetParent(),state.card:GetParent()
+        assert(ui.valid(parent) and ui.valid(ownParent) and ownParent:GetAddress()==parent:GetAddress(),"settings card visibility parent differs from original Social")
+        local visibility,opacity=reference:GetVisibility(),reference:GetRenderOpacity()
+        assert(type(visibility)=="number" and visibility>=0 and visibility<=4,"original Social visibility invalid")
+        assert(type(opacity)=="number" and opacity==opacity and opacity>=0 and opacity<=1,"original Social opacity invalid")
+        if state.card:GetVisibility()~=visibility then
+            state.card:SetVisibility(visibility)
+            assert(state.card:GetVisibility()==visibility,"settings card visibility readback differs")
+        end
+        if state.card:GetRenderOpacity()~=opacity then
+            state.card:SetRenderOpacity(opacity)
+            assert(math.abs(state.card:GetRenderOpacity()-opacity)<0.000001,"settings card opacity readback differs")
+        end
+        local originalMesh,mesh=reference.Social_Card.CardMesh,state.actor.CardMesh
+        assert(ui.valid(originalMesh) and ui.valid(mesh),"settings card native visibility mesh unavailable")
+        local visible=originalMesh:IsVisible()
+        assert(type(visible)=="boolean","original Social mesh visibility invalid")
+        if mesh:IsVisible()~=visible then
+            assert(ui.valid(state.actor.SceneCaptureComponent2D),"settings card visibility renderer unavailable")
+            -- HideCards_E hides the original rendered card and its children, not the shared row.
+            mesh:SetVisibility(visible,true)
+            assert(mesh:IsVisible()==visible,"settings card mesh visibility readback differs")
+            state.actor.SceneCaptureComponent2D:CaptureScene()
+        end
+    end
     local function prepareHover()
         local layout=state.hover_layout
         assert(ui.valid(state.actor) and ui.valid(layout.back),"settings hover renderer unavailable before layout")
@@ -76,6 +104,7 @@ function M.start(mod,directory)
         if not root then state=nil;return end
         if state and state.root:GetAddress()==root:GetAddress() and ui.valid(state.card) then
             if state.hover_layout then prepareHover();return end
+            syncVisibility()
             if state.open_requested then
                 local mode=state.open_requested
                 state.open_requested=nil
