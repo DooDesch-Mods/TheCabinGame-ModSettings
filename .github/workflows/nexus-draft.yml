@@ -6,18 +6,6 @@ on:
         description: Update the unpublished file after checking its current state
         type: boolean
         default: false
-  push:
-    branches: [main]
-    paths:
-      - 'Mods/**'
-      - 'Paks/**'
-      - 'profile_templates/**'
-      - 'package.json'
-      - 'acceptance.json'
-      - 'README.md'
-      - 'LICENSE.md'
-      - 'CHANGELOG.md'
-      - 'tools/package.py'
 permissions:
   contents: read
 concurrency:
