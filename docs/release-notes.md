@@ -1,7 +1,7 @@
-# CabinModSettings 0.1.1
+## Changes in 0.1.1
 
-> 🛟 **Need help or found a bug?** Get support at [support.doodesch.de/modsettings](https://support.doodesch.de/modsettings).
+### Fixed
 
-Fixes the Mods card staying visible when the original main-menu cards hide, including the Host dialog.
+- Hide and restore the Mods card together with the original main-menu cards.
 
-Requires [UE4SS 3.0.1 or later](https://www.nexusmods.com/thecabingame/mods/4).
+For manual installation and requirements, see README.md in the ZIP.

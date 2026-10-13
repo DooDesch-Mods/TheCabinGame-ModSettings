@@ -2,7 +2,9 @@
 
 ## 0.1.1 - 2026-10-13
 
-- Fixes the Mods card staying visible when the original main-menu cards hide, including the Host dialog.
+### Fixed
+
+- Hide and restore the Mods card together with the original main-menu cards.
 
 ## 0.1.0 - 2026-10-13
 
