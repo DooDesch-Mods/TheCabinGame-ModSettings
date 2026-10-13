@@ -38,6 +38,7 @@ jobs:
           PRODUCT_NAME: Cabin Mod Settings
           PRODUCT_SUMMARY: Adds a Mods menu for supported settings, installed versions and support links.
           PRODUCT_SUPPORT: https://support.doodesch.de/modsettings
+          NEXUS_MOD_URL: ${{ vars.NEXUS_MOD_URL }}
           PRODUCT_THUMBNAIL: https://raw.githubusercontent.com/DooDesch-Mods/TheCabinGame-ModSettings/main/docs/thumbnail.png
         run: python tools/announce-release.py
       - name: Keep Discord acknowledgement
