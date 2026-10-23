@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-10-23
+
+### Fixed
+
+- Search for optional panel functions only while the settings panel is open.
+- Reuse the active menu reference and limit absent-menu discovery to once per second.
+
 ## 0.1.2 - 2026-10-13
 
 ### Fixed

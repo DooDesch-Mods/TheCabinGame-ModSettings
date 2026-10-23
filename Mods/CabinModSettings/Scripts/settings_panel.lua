@@ -15,6 +15,11 @@ end
 function M.start(mod,directory)
     local model=require("cabin_panel").new(mod.registry,os.time)
     local self={model=model,rows={},selectors={},rendering=false}
+    local function bind(path,callback)
+        -- Optional panel classes are not loaded during gameplay. Do not search
+        -- for their functions until a panel instance can receive input.
+        mod:bind(path,callback,nil,function() return ui.valid(self.widget) and self.widget:IsInViewport() end)
+    end
     local function label(text)
         local widget=ui.native("TextBlock",self.widget.WidgetTree)
         widget:SetFont(self.font);ui.text(widget,text)
@@ -266,12 +271,12 @@ function M.start(mod,directory)
             model:edit(record.id,record.field.key,option.value);ui.text(record.widget.OptionType_T,option.label);status()
         end
     end
-    mod:bind(CHOICE .. ":BndEvt__CabinChoiceRow_LeftArrow_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,-1) end)
-    mod:bind(CHOICE .. ":BndEvt__CabinChoiceRow_RightArrow_B_K2Node_ComponentBoundEvent_1_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,1) end)
-    mod:bind(SELECTOR .. ":BndEvt__CabinSelectorRow_Gameplay_B_K2Node_ComponentBoundEvent_4_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,0) end)
-    mod:bind(ACTION .. ":BndEvt__CabinActionRow_ResetInputs_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,0) end)
+    bind(CHOICE .. ":BndEvt__CabinChoiceRow_LeftArrow_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,-1) end)
+    bind(CHOICE .. ":BndEvt__CabinChoiceRow_RightArrow_B_K2Node_ComponentBoundEvent_1_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,1) end)
+    bind(SELECTOR .. ":BndEvt__CabinSelectorRow_Gameplay_B_K2Node_ComponentBoundEvent_4_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,0) end)
+    bind(ACTION .. ":BndEvt__CabinActionRow_ResetInputs_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) rowPressed(context,0) end)
     for _,entry in ipairs({{1,true},{2,false}}) do
-        mod:bind(SELECTOR .. ":BndEvt__CabinSelectorRow_Gameplay_B_K2Node_ComponentBoundEvent_" .. entry[1] .. "_OnButtonHoverEvent__DelegateSignature",function(context)
+        bind(SELECTOR .. ":BndEvt__CabinSelectorRow_Gameplay_B_K2Node_ComponentBoundEvent_" .. entry[1] .. "_OnButtonHoverEvent__DelegateSignature",function(context)
             if self.rendering or model.pending or not ui.valid(self.widget) or not self.widget:IsInViewport() then return end
             local record=self.rows[context:get():GetAddress()]
             if not record or (record.role~="select" and record.role~="info_select") then return end
@@ -281,7 +286,7 @@ function M.start(mod,directory)
             else row:QueuePlayAnimationReverse(row.gameplayprogress,3,false) end
         end)
     end
-    mod:bind(BOOL .. ":BndEvt__CabinBoolRow_CheckBox_129_K2Node_ComponentBoundEvent_2_OnCheckBoxComponentStateChanged__DelegateSignature",function(context,value)
+    bind(BOOL .. ":BndEvt__CabinBoolRow_CheckBox_129_K2Node_ComponentBoundEvent_2_OnCheckBoxComponentStateChanged__DelegateSignature",function(context,value)
         if self.rendering or model.pending then return end
         local record=self.rows[context:get():GetAddress()]
         if record then model:edit(record.id,record.field.key,value:get());status() end
@@ -297,7 +302,7 @@ function M.start(mod,directory)
         {15,"OnButtonHoverEvent",function() self.defaults:QueuePlayAnimationReverse(self.defaults.ApplyProgress,2.5,false) end},
     }) do
         local path=":BndEvt__CabinDefaultsRow_Apply_B_K2Node_ComponentBoundEvent_" .. entry[1] .. "_" .. entry[2] .. "__DelegateSignature"
-        mod:bind(DEFAULTS .. path,function(context)
+        bind(DEFAULTS .. path,function(context)
             if ui.valid(self.widget) and self.widget:IsInViewport() and ui.valid(self.defaults) and context:get():GetAddress()==self.defaults:GetAddress() then entry[3]() end
         end)
     end
@@ -306,19 +311,19 @@ function M.start(mod,directory)
         {"BndEvt__CabinSettingsPanel_Cancel_B_K2Node_ComponentBoundEvent_12_OnButtonPressedEvent__DelegateSignature",function() self:close() end},
         {"BndEvt__CabinSettingsPanel_Apply_B_1_K2Node_ComponentBoundEvent_3_OnButtonPressedEvent__DelegateSignature",defaults},
     }) do
-        mod:bind(PANEL .. ":" .. entry[1],function(context)
+        bind(PANEL .. ":" .. entry[1],function(context)
             if ui.valid(self.widget) and context:get():GetAddress()==self.widget:GetAddress() then entry[2]() end
         end)
     end
     for _,entry in ipairs({{14,"Apply_B","ApplyProgress",true},{15,"Apply_B","ApplyProgress",false},{16,"Cancel_B","CancelProgress",true},{17,"Cancel_B","CancelProgress",false}}) do
         local path=":BndEvt__CabinSettingsPanel_" .. entry[2] .. "_K2Node_ComponentBoundEvent_" .. entry[1] .. "_OnButtonHoverEvent__DelegateSignature"
-        mod:bind(PANEL .. path,function(context)
+        bind(PANEL .. path,function(context)
             if not ui.valid(self.widget) or not self.widget:IsInViewport() or context:get():GetAddress()~=self.widget:GetAddress() then return end
             if entry[4] then self.widget:QueuePlayAnimationForward(self.widget[entry[3]],2,false)
             else self.widget:QueuePlayAnimationReverse(self.widget[entry[3]],2.5,false) end
         end)
     end
-    mod:bind("/Script/UMG.UserWidget:OnPreviewKeyDown",function(context,geometry,event)
+    bind("/Script/UMG.UserWidget:OnPreviewKeyDown",function(context,geometry,event)
         if not ui.valid(self.widget) or not self.widget:IsInViewport() then return end
         local widget=context:get()
         if not ui.valid(widget) or widget:GetWorld():GetAddress()~=self.widget:GetWorld():GetAddress() then return end

@@ -8,6 +8,10 @@ function M.start(mod,directory)
     local panel=require("settings_panel").start(mod,directory)
     local state
     local intro_waiting
+    local discoveryTime
+    local function bind(path,callback)
+        mod:bind(path,callback,nil,function() return state and ui.valid(state.card) end)
+    end
     local function syncVisibility()
         local reference=state.root.MenuCardSocial_WBP
         assert(ui.valid(reference) and ui.valid(reference.Social_Card),"settings card original Social visibility target unavailable")
@@ -94,12 +98,18 @@ function M.start(mod,directory)
             mod:log("info",mode .. " panel open requested")
         end
     end
-    mod:bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Single_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) request(context,"settings") end)
-    mod:bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Host_B_K2Node_ComponentBoundEvent_2_OnButtonPressedEvent__DelegateSignature",function(context) request(context,"info") end)
+    bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Single_B_K2Node_ComponentBoundEvent_0_OnButtonPressedEvent__DelegateSignature",function(context) request(context,"settings") end)
+    bind(CARD .. ":BndEvt__MenuCardModSettings_WBP_Host_B_K2Node_ComponentBoundEvent_2_OnButtonPressedEvent__DelegateSignature",function(context) request(context,"info") end)
     mod:observe("main menu card",function()
-        local root
-        for _,value in ipairs(FindAllOf("Menu_WBP_C") or {}) do
-            if ui.valid(value) and value:IsInViewport() then assert(not root,"main menu root ambiguous");root=value end
+        local root=state and state.root
+        if not ui.valid(root) or not root:IsInViewport() then
+            state=nil;root=nil
+            local now=os.time()
+            if discoveryTime==now then return end
+            discoveryTime=now
+            for _,value in ipairs(FindAllOf("Menu_WBP_C") or {}) do
+                if ui.valid(value) and value:IsInViewport() then assert(not root,"main menu root ambiguous");root=value end
+            end
         end
         if not root then state=nil;return end
         if state and state.root:GetAddress()==root:GetAddress() and ui.valid(state.card) then

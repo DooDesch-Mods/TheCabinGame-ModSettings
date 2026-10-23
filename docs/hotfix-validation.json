@@ -1,0 +1,51 @@
+{
+  "previous_version": "0.1.2",
+  "version": "0.1.3",
+  "tested_candidate_sha256": "2ba2759e31b4b98ecf6ca20cb86e56cfeed1450f1fcff2d417a8af55767d83f2",
+  "metadata_only_after_game_test": [
+    "mod-info.ini version"
+  ],
+  "previous_acceptance": {
+    "accepted": true,
+    "payload_sha256": "f07939f0a5b1a1eddedf2f7f7549e7f16dcdb0df63d3bcd414b0f18a09e0ba58",
+    "game_build": "25553694",
+    "ue4ss": "v3.0.1-1164-g5e627997",
+    "checks": {
+      "gameplay": {
+        "passed": true,
+        "evidence": "Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/host/modsettings-host-visibility-return2/report.json: exact 0.1.1 original Host/Join hide, acknowledged original Back callbacks and native card return; Mods mirrors Social. Original Settings and Mod Settings open/close remain normal. NullRHI original modal animation completion/rendering is not claimed. Unchanged 0.1.0 shared paths: Workspace/evidence/nexus-drafts/settings-host-card-visibility1/receipt.json at prior_acceptance_0_1_0/checks/gameplay. Workspace/evidence/nexus-drafts/capture/graphics-custom-restart2: native profile selection/Apply/Restore and custom restored-after-restart.dat; all 26 custom values checked after cold restart. Source bytes match current candidate.json. Final custom-menu-bottom.png inspected with complete Restore caption. Graphics gameplay values also confirmed in graphics-custom-final1 Game_Level with custom-gameplay-visible.png inspected. Original unrelated gameplay/host paths retain the previous acceptance evidence; their schemas and assets are unchanged. 0.1.3: Workspace/evidence/vortex-startup-crash-20261022/ui-game and control-lifecycle-accepted: actual Mods card/panel open and close with CabinGerman, menu departure and return. code-regressions: optional function discovery 2000 calls/100 ticks before, 0 after. Provider/store/assets unchanged; prior checks retained. No measured FPS improvement claim."
+      },
+      "installation": {
+        "passed": true,
+        "evidence": "Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/prepared.json selects frozen 5bbd3297e912ac33e8adadb9eba947265dcd6ae60009aa3f3b4cf4e969f5fcfd; exact installed Lua/mod-info and three original overlay companions match primary payload c3c4221cdc51487cf56decf301c8b1cd3dc9a350876a706710da9bf3df0e8086. Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/host/modsettings-host-visibility-return2/report.json confirms native UI loaded the candidate. No Steam/Vortex deployment claim. Workspace/evidence/nexus-drafts/capture/graphics-custom-restart2: native profile selection/Apply/Restore and custom restored-after-restart.dat; all 26 custom values checked after cold restart. Source bytes match current candidate.json. Final custom-menu-bottom.png inspected with complete Restore caption. Graphics gameplay values also confirmed in graphics-custom-final1 Game_Level with custom-gameplay-visible.png inspected. Original unrelated gameplay/host paths retain the previous acceptance evidence; their schemas and assets are unchanged. 0.1.3: Workspace/evidence/vortex-startup-crash-20261022/ui-game and control-lifecycle-accepted: actual Mods card/panel open and close with CabinGerman, menu departure and return. code-regressions: optional function discovery 2000 calls/100 ticks before, 0 after. Provider/store/assets unchanged; prior checks retained. No measured FPS improvement claim."
+      },
+      "integration": {
+        "passed": true,
+        "evidence": "Workspace/evidence/nexus-drafts/settings-host-card-visibility1/receipt.json at prior_acceptance_0_1_0/checks/integration retains the genuine unchanged provider/store/registry evidence. All those runtime sources and overlay bytes match the accepted 0.1.0 candidate. Workspace/evidence/nexus-drafts/capture/graphics-custom-restart2: native profile selection/Apply/Restore and custom restored-after-restart.dat; all 26 custom values checked after cold restart. Source bytes match current candidate.json. Final custom-menu-bottom.png inspected with complete Restore caption. Graphics gameplay values also confirmed in graphics-custom-final1 Game_Level with custom-gameplay-visible.png inspected. Original unrelated gameplay/host paths retain the previous acceptance evidence; their schemas and assets are unchanged. 0.1.3: Workspace/evidence/vortex-startup-crash-20261022/ui-game and control-lifecycle-accepted: actual Mods card/panel open and close with CabinGerman, menu departure and return. code-regressions: optional function discovery 2000 calls/100 ticks before, 0 after. Provider/store/assets unchanged; prior checks retained. No measured FPS improvement claim."
+      },
+      "multiplayer": {
+        "passed": false,
+        "status": "not_applicable",
+        "rationale": "ModSettings adds local main-menu UI and dispatches settings to their owning mods. It has no multiplayer gameplay or replication feature. Provider multiplayer behavior and the excluded Rejoin authority integration belong to their own acceptance scopes.",
+        "evidence": "Mods/CabinModSettings/Scripts/main.lua starts a local registry with fields={} and register=false; menu.lua and settings_panel.lua provide the local UI. No multiplayer session test is claimed."
+      },
+      "settings": {
+        "passed": true,
+        "evidence": "Workspace/evidence/nexus-drafts/settings-host-card-visibility1/receipt.json at prior_acceptance_0_1_0/checks/settings retains unchanged user-approved assets/hover and native Apply/reopen/Defaults/Cancel. Workspace/evidence/nexus-drafts/lan-pairs/settings-visibility1/host/modsettings-host-visibility-return2/report.json confirms affected 0.1.1 main-menu/card/Settings callback paths; no new pointer/rendering test is claimed. Workspace/evidence/nexus-drafts/capture/graphics-custom-restart2: native profile selection/Apply/Restore and custom restored-after-restart.dat; all 26 custom values checked after cold restart. Source bytes match current candidate.json. Final custom-menu-bottom.png inspected with complete Restore caption. Graphics gameplay values also confirmed in graphics-custom-final1 Game_Level with custom-gameplay-visible.png inspected. Original unrelated gameplay/host paths retain the previous acceptance evidence; their schemas and assets are unchanged. 0.1.3: Workspace/evidence/vortex-startup-crash-20261022/ui-game and control-lifecycle-accepted: actual Mods card/panel open and close with CabinGerman, menu departure and return. code-regressions: optional function discovery 2000 calls/100 ticks before, 0 after. Provider/store/assets unchanged; prior checks retained. No measured FPS improvement claim."
+      },
+      "single_mod": {
+        "passed": false,
+        "status": "not_applicable",
+        "rationale": "A separate full gameplay run with only this menu is not a product criterion. ModSettings supplies no gameplay mechanic and does not require a settings provider; without providers it displays an empty settings view. Existing real menu and provider integration acceptance covers the requested product actions.",
+        "evidence": "Mods/CabinModSettings/Scripts/main.lua uses register=false; settings_panel.lua checks #snapshots and displays 'No registered mods', while Defaults requires self.selected. No isolated game run is claimed."
+      }
+    },
+    "previous_acceptance": "docs/hotfix-validation.json#previous_acceptance",
+    "current_scope": "0.1.3: Workspace/evidence/vortex-startup-crash-20261022/ui-game and control-lifecycle-accepted: actual Mods card/panel open and close with CabinGerman, menu departure and return. code-regressions: optional function discovery 2000 calls/100 ticks before, 0 after. Provider/store/assets unchanged; prior checks retained. No measured FPS improvement claim."
+  },
+  "limits": [
+    "No complete three-player round or controlled FPS comparison",
+    "Physical pointer hitboxes and world-board/riddle rendering not fully measured"
+  ],
+  "delta_evidence": "0.1.3: Workspace/evidence/vortex-startup-crash-20261022/ui-game and control-lifecycle-accepted: actual Mods card/panel open and close with CabinGerman, menu departure and return. code-regressions: optional function discovery 2000 calls/100 ticks before, 0 after. Provider/store/assets unchanged; prior checks retained. No measured FPS improvement claim."
+}

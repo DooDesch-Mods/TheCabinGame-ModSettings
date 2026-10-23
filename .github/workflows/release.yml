@@ -6,6 +6,10 @@ on:
         description: Update the existing Nexus Main File (inspect Nexus before retry)
         type: boolean
         default: false
+      announce_discord:
+        description: Send a Discord release announcement
+        type: boolean
+        default: false
 permissions:
   contents: write
   actions: write
@@ -69,7 +73,7 @@ jobs:
           path: dist/nexus-release.json
           if-no-files-found: warn
       - name: Dispatch Discord announcement
-        if: success()
+        if: success() && inputs.announce_discord
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

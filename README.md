@@ -36,4 +36,4 @@ The adapter's `read()` returns values and an integer revision. Its `apply(values
 
 To supply Info metadata, add an optional `Mods/<mod-name>/mod-info.ini` with both `version=<actual package version>` and `support=<https URL>`, one per line. Use the package's real version and a direct HTTPS support URL. Mods without this file remain listed with unavailable metadata.
 
-Rejoin integration requires its matching layout/host-settings adapter and authority copies. That combined installation is unaccepted. Do not overwrite an active Rejoin runtime.
+Rejoin integration requires its matching layout/host-settings adapter and authority copies. The 0.1.3 fixes have local menu and host/client integration evidence; a complete group round remains unmeasured. Do not overwrite an active Rejoin runtime.

@@ -17,9 +17,10 @@ function M.start(directory,definition)
             return self.store:save(values)
         end,
     }) end
-    function self:bind(path,callback,phase)
+    function self:bind(path,callback,phase,ready)
         assert(not self.hooks[path],"duplicate hook: " .. path)
-        self.hooks[path] = {callback=callback,bound=false,phase=phase or "post"}
+        assert(ready==nil or type(ready)=="function","hook readiness must be a function")
+        self.hooks[path] = {callback=callback,bound=false,phase=phase or "post",ready=ready}
     end
     function self:observe(name,callback)
         assert(not self.observers[name],"duplicate observer")
@@ -29,7 +30,7 @@ function M.start(directory,definition)
         assert(IsInGameThread(),"runtime callback outside game thread")
         self.registry:poll()
         for path,hook in pairs(self.hooks) do
-            if not hook.bound and not hook.failed and M.valid(StaticFindObject(path)) then
+            if not hook.bound and not hook.failed and (not hook.ready or hook.ready()) and M.valid(StaticFindObject(path)) then
                 local ok,cause = pcall(function()
                     local callback = function(...)
                         local result = table.pack(xpcall(hook.callback,debug.traceback,...))

@@ -2,3 +2,4 @@
 *.pak binary
 *.utoc binary
 *.ucas binary
+Mods/** -text
