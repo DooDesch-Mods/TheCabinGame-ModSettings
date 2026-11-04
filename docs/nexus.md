@@ -2,6 +2,8 @@
 
 > 🛟 **Need help or found a bug?** Get support at [support.doodesch.de/modsettings](https://support.doodesch.de/modsettings).
 
+[![Discord](https://mods.doodesch.de/img/badge.png)](https://mods.doodesch.de)
+
 Adds a **Mods** card to the main menu. Flip it to open **Settings** or **Info**.
 
 Settings opens a separate window with a selector for each supported installed mod and **Apply**, **Cancel** and **Defaults**. Each mod keeps its own preferences. Info opens a separate window with installed mods, their actual versions and HTTPS support links where supplied. Missing information is shown as unavailable.
@@ -19,3 +21,9 @@ CabinModSettings is optional for the individual mods. FastTurns and ShortEvents 
 Close the game and remove this mod's folder and its named files from `Content/Paks/~mods`. Back up `Scripts/settings.dat` first to keep your preferences.
 
 By DooDesch.
+
+## Community
+
+[![DooDesch Mods on Discord](https://mods.doodesch.de/img/card.png)](https://mods.doodesch.de)
+
+Join the DooDesch Mods Discord: update pings, polls on what comes next, and playtests of new mods.
