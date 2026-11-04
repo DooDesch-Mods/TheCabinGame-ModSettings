@@ -2,6 +2,8 @@
 
 > 🛟 **Need help or found a bug?** Get support at [support.doodesch.de/modsettings](https://support.doodesch.de/modsettings).
 
+[![Discord](https://mods.doodesch.de/img/badge.svg)](https://mods.doodesch.de)
+
 Adds a fourth main-menu card named **Mods**. Flip it to choose **Settings** or **Info**.
 
 Settings opens a separate window with a selector for each supported installed mod and **Apply**, **Cancel** and **Defaults**. Each mod keeps its own preferences. Info opens a separate window with installed mods, their actual versions and HTTPS support links where supplied. Missing version or support information is shown as unavailable.
@@ -37,3 +39,9 @@ The adapter's `read()` returns values and an integer revision. Its `apply(values
 To supply Info metadata, add an optional `Mods/<mod-name>/mod-info.ini` with both `version=<actual package version>` and `support=<https URL>`, one per line. Use the package's real version and a direct HTTPS support URL. Mods without this file remain listed with unavailable metadata.
 
 Rejoin integration requires its matching layout/host-settings adapter and authority copies. The 0.1.3 fixes have local menu and host/client integration evidence; a complete group round remains unmeasured. Do not overwrite an active Rejoin runtime.
+
+## Community
+
+[![DooDesch Mods on Discord](https://mods.doodesch.de/img/card.svg)](https://mods.doodesch.de)
+
+Join the DooDesch Mods Discord: update pings, polls on what comes next, and playtests of new mods.
